@@ -1,10 +1,9 @@
 // csun map quiz - project 5
 // isaiah bernal
 
-// the five locations for the quiz.
-// lat/lng pulled from google maps by searching each building on campus.
-// radius is how close the user needs to click (in meters) to count as correct.
-// my assigned location is the asian american activities center.
+// five locations: 4 chosen + my assigned one (asian american activities center)
+// lat/lng pulled from google maps by dropping pins on each building
+// radius is the tolerance in meters — how close counts as correct
 var locations = [
   {
     name: "Asian American Activities Center",
@@ -38,6 +37,23 @@ var locations = [
   }
 ];
 
+// custom dark map style so the map matches the dark panel
+// generated from google maps styling wizard
+var darkStyle = [
+  { elementType: "geometry", stylers: [{ color: "#1a1a1f" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#6b6b7a" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#0d0d0f" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#2a2a32" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#111114" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#3a3a42" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0d0d0f" }] },
+  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#16161b" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#141a14" }] },
+  { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#3a4a3a" }] },
+  { featureType: "transit", elementType: "geometry", stylers: [{ color: "#1a1a22" }] },
+  { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#2a2a3a" }] }
+];
+
 var map;
 var currentIndex = 0;
 var score = 0;
@@ -46,17 +62,17 @@ var timerInterval;
 var elapsedSeconds = 0;
 var gameActive = false;
 
-// initMap is called automatically by the google maps script tag once it loads
+// called automatically once the google maps script tag finishes loading
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
     center: { lat: 34.2414, lng: -118.5285 },
     zoom: 16,
     disableDefaultUI: true,
-    gestureHandling: "none",    // per the spec, panning and zooming stay off
-    keyboardShortcuts: false
+    gestureHandling: "none",    // per the spec, panning and zooming are off
+    keyboardShortcuts: false,
+    styles: darkStyle
   });
 
-  // listen for double clicks anywhere on the map
   map.addListener("dblclick", function(event) {
     handleClick(event.latLng);
   });
@@ -70,15 +86,16 @@ function startGame() {
   elapsedSeconds = 0;
   gameActive = true;
 
-  // clear any rectangles left over from a previous round
+  // clear rectangles from the previous round
   drawnRects.forEach(function(r) { r.setMap(null); });
   drawnRects = [];
 
-  $("#feedback-box").empty();
-  $("#score-box").addClass("hidden");
-  $("#question-box").show();
-  $("#timer-box").show();
+  $("#answer-log").empty();
+  $("#score-screen").hide();
+  $("#prompt-section").show();
+  $("#log-section").show();
 
+  updateCounter();
   showQuestion();
   startTimer();
 }
@@ -88,7 +105,20 @@ function showQuestion() {
     endGame();
     return;
   }
-  $("#question-text").text("Where is " + locations[currentIndex].name + "?");
+
+  var loc = locations[currentIndex];
+
+  // animate the prompt text swap
+  $("#prompt-name").css({ opacity: 0 }).text(loc.name).animate({ opacity: 1 }, 200);
+
+  updateCounter();
+
+  // add a pending entry to the log so the user sees what's being asked
+  var entry = $("<div>").addClass("log-entry pending");
+  entry.append($("<span>").addClass("log-icon").text("?"));
+  entry.append($("<span>").text((currentIndex + 1) + ". " + loc.name));
+  entry.attr("id", "log-entry-" + currentIndex);
+  $("#answer-log").append(entry);
 }
 
 function handleClick(latLng) {
@@ -97,34 +127,37 @@ function handleClick(latLng) {
   var target = locations[currentIndex];
   var targetLatLng = new google.maps.LatLng(target.lat, target.lng);
 
-  // measure how far the click was from the correct spot
+  // how far was the click from the actual building
   var distance = google.maps.geometry.spherical.computeDistanceBetween(latLng, targetLatLng);
   var correct = distance <= target.radius;
 
-  if (correct) {
-    score++;
-    addFeedback("Your answer is correct!!", "correct");
-  } else {
-    addFeedback("Sorry wrong location.", "wrong");
-  }
+  if (correct) score++;
 
   drawRect(target, correct);
+  updateLogEntry(currentIndex, target.name, correct, Math.round(distance));
 
   currentIndex++;
   showQuestion();
 }
 
-// adds a line to the feedback log on the left panel
-function addFeedback(message, type) {
-  var entry = $("<p>").addClass("feedback-entry " + type).text(message);
-  $("#feedback-box").append(entry);
+function updateLogEntry(index, name, correct, dist) {
+  var entry = $("#log-entry-" + index);
+  entry.removeClass("pending").addClass(correct ? "correct" : "wrong");
+  entry.empty();
+
+  var icon = correct ? "+" : "x";
+  var detail = correct
+    ? name
+    : name + " (" + dist + "m off)";
+
+  entry.append($("<span>").addClass("log-icon").text(icon));
+  entry.append($("<span>").text((index + 1) + ". " + detail));
 }
 
-// draws a filled rectangle over the correct location.
-// green if the user got it right, red if they missed.
+// draws a rectangle over the correct location — green if right, red if wrong
 function drawRect(target, correct) {
   var offset = 0.00025;
-  var color = correct ? "#4caf50" : "#f44336";
+  var color = correct ? "#4caf50" : "#ff4d4d";
 
   var rect = new google.maps.Rectangle({
     bounds: {
@@ -136,24 +169,29 @@ function drawRect(target, correct) {
     map: map,
     strokeColor: color,
     strokeWeight: 2,
-    strokeOpacity: 0.9,
+    strokeOpacity: 1,
     fillColor: color,
-    fillOpacity: 0.4
+    fillOpacity: 0.35
   });
 
-  // quick pulse effect so the user notices where the answer landed
+  // pulse the fill a couple times so the result is obvious, then leave it
   var fading = false;
   var pulse = setInterval(function() {
     fading = !fading;
-    rect.setOptions({ fillOpacity: fading ? 0.15 : 0.4 });
-  }, 500);
+    rect.setOptions({ fillOpacity: fading ? 0.1 : 0.35 });
+  }, 450);
 
   setTimeout(function() {
     clearInterval(pulse);
-    rect.setOptions({ fillOpacity: 0.4 });
+    rect.setOptions({ fillOpacity: 0.35 });
   }, 2000);
 
   drawnRects.push(rect);
+}
+
+function updateCounter() {
+  $("#q-current").text(Math.min(currentIndex + 1, locations.length));
+  $("#q-total").text(locations.length);
 }
 
 function endGame() {
@@ -162,11 +200,13 @@ function endGame() {
 
   var wrong = locations.length - score;
 
-  $("#question-box").hide();
-  $("#timer-box").hide();
+  $("#prompt-section").hide();
+  $("#log-section").hide();
 
-  $("#final-score").text(score + " Correct, " + wrong + " Incorrect");
-  $("#score-box").removeClass("hidden");
+  $("#score-correct").text(score);
+  $("#score-breakdown").text(score + " correct, " + wrong + " wrong");
+  $("#score-time-final").text("Finished in " + formatTime(elapsedSeconds));
+  $("#score-screen").css("display", "flex");
 }
 
 function startTimer() {
@@ -181,13 +221,15 @@ function startTimer() {
 }
 
 function updateTimerDisplay() {
-  var minutes = Math.floor(elapsedSeconds / 60);
-  var seconds = elapsedSeconds % 60;
-  var display = minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
-  $("#timer").text(display);
+  $("#timer-display").text(formatTime(elapsedSeconds));
 }
 
-// restart button just kicks off a fresh game
+function formatTime(s) {
+  var m = Math.floor(s / 60);
+  var sec = s % 60;
+  return m + ":" + (sec < 10 ? "0" : "") + sec;
+}
+
 $("#restart-btn").on("click", function() {
   startGame();
 });
