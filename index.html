@@ -3,39 +3,70 @@
 <head>
   <meta charset="UTF-8" />
   <title>CSUN Map Quiz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 </head>
 <body>
 
   <div id="panel">
-    <h1>Map Quiz</h1>
-    <p>Please double click on the map the location of:</p>
 
-    <div id="question-box">
-      <p id="question-text">Loading...</p>
+    <div id="panel-header">
+      <div id="logo">
+        <span id="logo-csun">CSUN</span>
+        <span id="logo-sub">MAP QUIZ</span>
+      </div>
+      <div id="q-counter">
+        <span id="q-current">1</span><span id="q-sep">/</span><span id="q-total">5</span>
+      </div>
     </div>
 
-    <div id="feedback-box"></div>
-
-    <div id="timer-box">
-      Time: <span id="timer">0:00</span>
+    <div id="timer-ring-wrap">
+      <svg id="timer-svg" viewBox="0 0 120 120">
+        <circle class="ring-bg" cx="60" cy="60" r="50" />
+        <circle class="ring-fg" id="ring-progress" cx="60" cy="60" r="50" />
+      </svg>
+      <div id="timer-center">
+        <div id="timer-display">0:00</div>
+        <div id="timer-label">elapsed</div>
+      </div>
     </div>
 
-    <div id="score-box" class="hidden">
-      <p id="final-score"></p>
+    <div id="prompt-section">
+      <div id="prompt-eyebrow">double click to locate</div>
+      <div id="prompt-name">Loading...</div>
+    </div>
+
+    <div id="log-section">
+      <div id="log-header">Answer Log</div>
+      <div id="answer-log"></div>
+    </div>
+
+    <div id="score-screen">
+      <div id="score-label">Final Score</div>
+      <div id="score-fraction">
+        <span id="score-correct">0</span><span id="score-denom">/5</span>
+      </div>
+      <div id="score-breakdown"></div>
+      <div id="score-time-final"></div>
       <button id="restart-btn">Play Again</button>
     </div>
+
   </div>
 
   <div id="map"></div>
 
   <!--
-    replace YOUR_API_KEY with your actual key from google cloud console.
-    make sure Maps JavaScript API is enabled and billing is set up.
-    the geometry library is needed for distance calculation.
+    replace YOUR_API_KEY with your actual key.
+    make sure Maps JavaScript API is enabled in google cloud console.
+    the geometry library handles the distance math.
   -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=geometry&callback=initMap" async defer></script>
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=geometry&callback=initMap"
+    async defer
+  ></script>
   <script src="app.js"></script>
 
 </body>
