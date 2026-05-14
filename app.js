@@ -1,16 +1,31 @@
 // csun map quiz — project 5
 // isaiah bernal
+//
+// the game asks the user to double click where they think five csun buildings are.
+// after each guess it draws a rectangle over the correct spot and logs the result.
+// at the end it shows the total score and elapsed time.
 
-// five locations: 4 chosen + my assigned one (asian american activities center)
+
+// ─── locations ────────────────────────────────────────────────────────────────
+// each object holds the building name, lat/lng center, and a tolerance radius.
+// to verify/fix coordinates: open the page, right-click anywhere on the map,
+// and the exact lat/lng logs to the console. use that to pin each building.
+// my assigned location from the project sheet is the asian american activities center.
+
 var locations = [
-  { name: "Asian American Activities Center", lat: 34.24285, lng: -118.52998, radius: 55 },
-  { name: "University Library",               lat: 34.24175, lng: -118.52802, radius: 60 },
-  { name: "Jacaranda Hall",                   lat: 34.24060, lng: -118.52666, radius: 55 },
-  { name: "Student Recreation Center",        lat: 34.23955, lng: -118.52606, radius: 65 },
-  { name: "Manzanita Hall",                   lat: 34.24378, lng: -118.52758, radius: 55 }
+  { name: "Asian American Activities Center", lat: 34.24280, lng: -118.53010, radius: 60 },
+  { name: "University Library",               lat: 34.24163, lng: -118.52815, radius: 65 },
+  { name: "Jacaranda Hall",                   lat: 34.24048, lng: -118.52680, radius: 60 },
+  { name: "Student Recreation Center",        lat: 34.23942, lng: -118.52588, radius: 70 },
+  { name: "Manzanita Hall",                   lat: 34.24363, lng: -118.52750, radius: 60 }
 ];
 
-// dark style rules array — plain JS, safe to define before google loads
+
+// ─── dark map style rules ─────────────────────────────────────────────────────
+// plain JS array — safe to define here before google loads.
+// the StyledMapType object is created inside initMap() where google.maps exists.
+// docs: https://developers.google.com/maps/documentation/javascript/examples/maptype-styled-simple
+
 var darkStyleRules = [
   { elementType: "geometry",            stylers: [{ color: "#1a1a1f" }] },
   { elementType: "labels.text.fill",    stylers: [{ color: "#8888aa" }] },
@@ -31,6 +46,9 @@ var darkStyleRules = [
   { featureType: "administrative.land_parcel", elementType: "labels",          stylers: [{ visibility: "off" }] }
 ];
 
+
+// ─── game state ────────────────────────────────────────────────────────────────
+
 var map;
 var currentIndex   = 0;
 var score          = 0;
@@ -39,30 +57,44 @@ var timerInterval;
 var elapsedSeconds = 0;
 var gameActive     = false;
 
-// initMap is called by the google maps script tag once the API is ready
+
+// ─── initMap ───────────────────────────────────────────────────────────────────
+// called automatically by the maps API once it finishes loading via &callback=initMap.
+// all google.maps.* usage lives here or in functions called after this fires.
+
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
     center: { lat: 34.2416, lng: -118.5280 },
     zoom: 17,
     disableDefaultUI: true,
-    disableDoubleClickZoom: true,
+    disableDoubleClickZoom: true,   // stops maps from consuming dblclick for zoom
     keyboardShortcuts: false,
-    clickableIcons: false
+    clickableIcons: false           // prevents POI popups from interrupting clicks
   });
 
-  // google.maps.StyledMapType — registers a fully custom named map style
+  // google.maps.StyledMapType — creates a named, registerable custom map style.
+  // takes the style rules array and an options object with a display name.
+  // this is one of the two google maps API features used for the presentation.
   // docs: https://developers.google.com/maps/documentation/javascript/examples/maptype-styled-simple
   var csunDarkStyle = new google.maps.StyledMapType(darkStyleRules, { name: "CSUN Dark" });
+
+  // register the custom style under id "csun_dark" so the map can reference it
   map.mapTypes.set("csun_dark", csunDarkStyle);
 
-  // map.setOptions() — applies config changes to an existing map instance.
-  // used here to activate our StyledMapType and also later in drawRect()
-  // to animate rectangle opacity without recreating the overlay.
+  // map.setOptions() applies config changes to an already-created map instance.
+  // used here to switch to our StyledMapType. also used in drawRect() to animate
+  // rectangle fill opacity without tearing down and recreating the overlay.
+  // this is the second google maps API feature used for the presentation.
   // docs: https://developers.google.com/earth-engine/apidocs/map-setoptions
   map.setOptions({ mapTypeId: "csun_dark" });
 
-  // dblclick listener — fires after disableDoubleClickZoom kills the zoom behavior
-  // so the event reaches our handler instead of being consumed by the map
+  // right-click anywhere to log the lat/lng — useful for verifying building coordinates
+  google.maps.event.addListener(map, "rightclick", function(event) {
+    console.log("lat: " + event.latLng.lat().toFixed(5) + ", lng: " + event.latLng.lng().toFixed(5));
+  });
+
+  // dblclick fires after disableDoubleClickZoom kills the zoom behavior,
+  // so it reaches our handler cleanly instead of being consumed by the map
   google.maps.event.addListener(map, "dblclick", function(event) {
     handleClick(event.latLng);
   });
@@ -70,12 +102,17 @@ function initMap() {
   startGame();
 }
 
+
+// ─── startGame ─────────────────────────────────────────────────────────────────
+// resets all state and begins a fresh round. called on load and by play again.
+
 function startGame() {
   currentIndex   = 0;
   score          = 0;
   elapsedSeconds = 0;
   gameActive     = true;
 
+  // remove all rectangles from the previous round before starting fresh
   drawnRects.forEach(function(r) { r.setMap(null); });
   drawnRects = [];
 
@@ -89,6 +126,11 @@ function startGame() {
   startTimer();
 }
 
+
+// ─── showQuestion ──────────────────────────────────────────────────────────────
+// displays the current building prompt and adds a pending log entry.
+// calls endGame if all five questions are done.
+
 function showQuestion() {
   if (currentIndex >= locations.length) {
     endGame();
@@ -97,12 +139,16 @@ function showQuestion() {
 
   var loc = locations[currentIndex];
 
+  // flash the left border so the question change is obvious
   $("#prompt-section").addClass("flash");
   setTimeout(function() { $("#prompt-section").removeClass("flash"); }, 400);
+
+  // fade the name in smoothly instead of snapping to the new text
   $("#prompt-name").css({ opacity: 0 }).text(loc.name).animate({ opacity: 1 }, 200);
 
   updateCounter();
 
+  // pending log entry — replaced with correct/wrong after the user clicks
   var entry = $("<div>").addClass("log-entry pending");
   entry.append($("<span>").addClass("log-icon").text("?"));
   entry.append($("<span>").text((currentIndex + 1) + ". " + loc.name));
@@ -110,13 +156,18 @@ function showQuestion() {
   $("#answer-log").append(entry);
 }
 
+
+// ─── handleClick ───────────────────────────────────────────────────────────────
+// fires on every double click. measures distance from click to the correct
+// building and decides if it's within the tolerance radius.
+
 function handleClick(latLng) {
   if (!gameActive) return;
 
   var target       = locations[currentIndex];
   var targetLatLng = new google.maps.LatLng(target.lat, target.lng);
 
-  // computeDistanceBetween measures straight-line meters between two LatLng points
+  // computeDistanceBetween returns straight-line meters between two LatLng points
   var distance = google.maps.geometry.spherical.computeDistanceBetween(latLng, targetLatLng);
   var correct  = distance <= target.radius;
 
@@ -129,6 +180,11 @@ function handleClick(latLng) {
   showQuestion();
 }
 
+
+// ─── updateLogEntry ────────────────────────────────────────────────────────────
+// updates the pending log entry to show correct or wrong after a guess.
+// if wrong, shows how many meters off the click was.
+
 function updateLogEntry(index, name, correct, dist) {
   var entry = $("#log-entry-" + index);
   entry.removeClass("pending").addClass(correct ? "correct" : "wrong");
@@ -138,10 +194,15 @@ function updateLogEntry(index, name, correct, dist) {
   entry.append($("<span>").text((index + 1) + ". " + (correct ? name : name + " (" + dist + "m off)")));
 }
 
-// draws a rectangle at the correct location — green if right, red if wrong.
-// rect.setOptions() animates the fill opacity without recreating the overlay
+
+// ─── drawRect ─────────────────────────────────────────────────────────────────
+// draws a filled rectangle centered on the correct building location.
+// green = correct, red = wrong.
+// rect.setOptions() animates fill opacity without recreating the overlay —
+// same API as map.setOptions(), just called on a Rectangle instead of the Map.
+
 function drawRect(target, correct) {
-  var offset = 0.00025;
+  var offset = 0.00022;   // roughly 24 meters each direction from center
   var color  = correct ? "#4caf50" : "#ff4d4d";
 
   var rect = new google.maps.Rectangle({
@@ -156,27 +217,36 @@ function drawRect(target, correct) {
     strokeWeight:  2,
     strokeOpacity: 1,
     fillColor:     color,
-    fillOpacity:   0.35
+    fillOpacity:   0.4
   });
 
+  // pulse the fill a few times using setOptions so the result is immediately obvious
   var fading = false;
   var pulse  = setInterval(function() {
     fading = !fading;
-    rect.setOptions({ fillOpacity: fading ? 0.1 : 0.35 });
+    rect.setOptions({ fillOpacity: fading ? 0.1 : 0.4 });
   }, 450);
 
   setTimeout(function() {
     clearInterval(pulse);
-    rect.setOptions({ fillOpacity: 0.35 });
+    rect.setOptions({ fillOpacity: 0.4 });
   }, 2000);
 
   drawnRects.push(rect);
 }
 
+
+// ─── updateCounter ─────────────────────────────────────────────────────────────
+// keeps the "1/5" counter in the header synced with currentIndex.
+
 function updateCounter() {
   $("#q-current").text(Math.min(currentIndex + 1, locations.length));
   $("#q-total").text(locations.length);
 }
+
+
+// ─── endGame ───────────────────────────────────────────────────────────────────
+// stops the timer and shows the final score screen.
 
 function endGame() {
   gameActive = false;
@@ -192,10 +262,15 @@ function endGame() {
   $("#score-screen").css("display", "flex");
 }
 
+
+// ─── timer ─────────────────────────────────────────────────────────────────────
+// counts up from zero and updates the display every second.
+
 function startTimer() {
   clearInterval(timerInterval);
   elapsedSeconds = 0;
   updateTimerDisplay();
+
   timerInterval = setInterval(function() {
     elapsedSeconds++;
     updateTimerDisplay();
@@ -206,11 +281,17 @@ function updateTimerDisplay() {
   $("#timer-display").text(formatTime(elapsedSeconds));
 }
 
+// pads seconds to two digits so 0:05 doesn't show as 0:5
 function formatTime(s) {
-  var m = Math.floor(s / 60);
+  var m   = Math.floor(s / 60);
   var sec = s % 60;
   return m + ":" + (sec < 10 ? "0" : "") + sec;
 }
+
+
+// ─── restart ───────────────────────────────────────────────────────────────────
+// startGame() already clears drawnRects by calling setMap(null) on each one,
+// so rectangles from the previous round are removed before the new round starts.
 
 $("#restart-btn").on("click", function() {
   startGame();
