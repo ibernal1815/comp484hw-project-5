@@ -1,23 +1,43 @@
-/* css variables so everything stays consistent */
+/* csun map quiz — project 5
+   isaiah bernal
+   stylesheet for the game UI. the layout is a fixed-width left panel
+   next to a full-height map that fills the remaining space. */
+
+
+/* ─── css variables ────────────────────────────────────────────────────────────
+   defining colors and fonts as variables here so changing one value
+   updates everywhere it's used instead of hunting through the file. */
+
 :root {
-  --bg:        #0d0d0f;
-  --panel:     #111114;
-  --surface:   #1a1a1f;
-  --border:    #2a2a32;
-  --accent:    #d4f455;   /* sharp lime green — the one color that pops */
-  --red:       #ff4d4d;
-  --green:     #4caf50;
-  --text:      #f0f0f0;
-  --muted:     #6b6b7a;
-  --font-head: "Syne", sans-serif;
-  --font-mono: "Space Mono", monospace;
+  --bg:        #0d0d0f;          /* page background, near black */
+  --panel:     #111114;          /* left panel background */
+  --surface:   #1a1a1f;          /* cards and inset elements */
+  --border:    #2a2a32;          /* subtle dividers and outlines */
+  --accent:    #d4f455;          /* lime green — only used for key highlights */
+  --red:       #ff4d4d;          /* wrong answer color */
+  --green:     #4caf50;          /* correct answer color */
+  --text:      #f0f0f0;          /* primary readable text */
+  --muted:     #6b6b7a;          /* secondary labels and placeholders */
+  --font-head: "Syne", sans-serif;         /* display font for big text */
+  --font-mono: "Space Mono", monospace;    /* monospace for data/ui text */
 }
+
+
+/* ─── reset ────────────────────────────────────────────────────────────────────
+   box-sizing: border-box makes padding and border included in element width
+   so sizing is predictable. margin/padding reset removes browser defaults. */
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
+
+
+/* ─── body ─────────────────────────────────────────────────────────────────────
+   flexbox on body lets the panel and map-wrap sit side by side.
+   height: 100vh fills the full browser window height.
+   overflow: hidden prevents any scroll from appearing on the page itself. */
 
 body {
   font-family: var(--font-mono);
@@ -28,10 +48,15 @@ body {
   overflow: hidden;
 }
 
-/* ── panel ── */
+
+/* ─── panel ─────────────────────────────────────────────────────────────────────
+   fixed width left column where all the game UI lives.
+   flex-direction: column stacks the header, timer, prompt, and log vertically.
+   overflow: hidden keeps the panel from growing if content gets too tall. */
+
 #panel {
-  width: 300px;
-  min-width: 300px;
+  width: 320px;
+  min-width: 320px;
   background: var(--panel);
   border-right: 1px solid var(--border);
   display: flex;
@@ -39,7 +64,11 @@ body {
   overflow: hidden;
 }
 
-/* ── header row ── */
+
+/* ─── panel header ─────────────────────────────────────────────────────────────
+   flex row with space-between pushes the logo to the left and
+   the question counter to the right. */
+
 #panel-header {
   display: flex;
   align-items: center;
@@ -47,6 +76,7 @@ body {
   padding: 20px 20px 0;
 }
 
+/* logo stacks "CSUN" above "MAP QUIZ" as two separate spans */
 #logo {
   display: flex;
   flex-direction: column;
@@ -68,6 +98,9 @@ body {
   margin-top: 2px;
 }
 
+/* question counter — "1/5", "2/5", etc.
+   q-current is white, the slash and total are muted so the current
+   number reads as the important thing. */
 #q-counter {
   font-family: var(--font-head);
   font-size: 1.2rem;
@@ -79,38 +112,50 @@ body {
   color: var(--text);
 }
 
-/* ── timer ring ── */
+
+/* ─── timer ring ───────────────────────────────────────────────────────────────
+   the ring is an svg with two circle elements — a dark background track
+   and an accent-colored foreground stroke on top.
+   position: relative on the wrapper lets timer-center sit on top of the svg
+   using position: absolute with inset: 0. */
+
 #timer-ring-wrap {
   position: relative;
   width: 120px;
   height: 120px;
   margin: 24px auto 0;
-  flex-shrink: 0;
+  flex-shrink: 0;   /* prevents the ring from squishing if panel runs out of height */
 }
 
+/* rotate -90deg so the stroke starts from 12 o'clock, not 3 o'clock */
 #timer-svg {
   width: 100%;
   height: 100%;
   transform: rotate(-90deg);
 }
 
+/* background track circle — always visible as the full ring */
 .ring-bg {
   fill: none;
   stroke: var(--surface);
   stroke-width: 8;
 }
 
+/* foreground stroke — accent color, sits on top of ring-bg.
+   stroke-dasharray sets the total dash length to the circle's circumference (~314px).
+   stroke-dashoffset shifts where the dash starts, which can animate the fill level.
+   transition makes any dashoffset changes animate smoothly over 1 second. */
 .ring-fg {
   fill: none;
   stroke: var(--accent);
   stroke-width: 8;
   stroke-linecap: round;
-  /* circumference of r=50 is ~314. starts full, we'll animate via js */
   stroke-dasharray: 314;
   stroke-dashoffset: 0;
   transition: stroke-dashoffset 1s linear;
 }
 
+/* timer text sits centered over the svg ring using absolute positioning */
 #timer-center {
   position: absolute;
   inset: 0;
@@ -125,7 +170,7 @@ body {
   font-size: 1.3rem;
   font-weight: 700;
   color: var(--text);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums;   /* keeps digits the same width so the timer doesn't shift */
 }
 
 #timer-label {
@@ -135,7 +180,12 @@ body {
   margin-top: 2px;
 }
 
-/* ── prompt ── */
+
+/* ─── prompt section ───────────────────────────────────────────────────────────
+   the card that shows the current building to find.
+   border-left: 3px accent gives it a colored left edge for visual weight.
+   flex-shrink: 0 keeps it from collapsing when the log grows tall. */
+
 #prompt-section {
   margin: 24px 20px 0;
   padding: 16px;
@@ -146,6 +196,7 @@ body {
   flex-shrink: 0;
 }
 
+/* small all-caps label above the building name */
 #prompt-eyebrow {
   font-size: 0.6rem;
   letter-spacing: 3px;
@@ -154,6 +205,7 @@ body {
   margin-bottom: 8px;
 }
 
+/* the actual building name text — large and bold so it's immediately readable */
 #prompt-name {
   font-family: var(--font-head);
   font-size: 1.05rem;
@@ -162,7 +214,13 @@ body {
   line-height: 1.3;
 }
 
-/* ── answer log ── */
+
+/* ─── answer log ───────────────────────────────────────────────────────────────
+   flex: 1 on log-section makes it grow to fill whatever height is left
+   after the header, timer, and prompt take their space.
+   min-height: 0 is required on flex children that need internal scroll —
+   without it, the child ignores overflow: hidden on its parent. */
+
 #log-section {
   margin: 20px 20px 0;
   flex: 1;
@@ -181,6 +239,7 @@ body {
   flex-shrink: 0;
 }
 
+/* answer-log scrolls vertically if entries overflow */
 #answer-log {
   flex: 1;
   overflow-y: auto;
@@ -190,11 +249,14 @@ body {
   padding-right: 4px;
 }
 
-/* thin custom scrollbar */
-#answer-log::-webkit-scrollbar { width: 3px; }
+/* thin webkit scrollbar so it doesn't eat into the log width */
+#answer-log::-webkit-scrollbar       { width: 3px; }
 #answer-log::-webkit-scrollbar-track { background: transparent; }
 #answer-log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
+/* base log entry styles — shared by pending, correct, and wrong variants.
+   entries start invisible and slightly offset to the left, then slide-in
+   animation brings them into place when they're added to the DOM. */
 .log-entry {
   padding: 10px 12px;
   border-radius: 3px;
@@ -208,6 +270,7 @@ body {
   animation: slide-in 0.25s ease forwards;
 }
 
+/* slides the entry from slightly left to its natural position */
 @keyframes slide-in {
   to { opacity: 1; transform: translateX(0); }
 }
@@ -218,6 +281,7 @@ body {
   margin-top: 1px;
 }
 
+/* correct answer — green tinted background and border */
 .log-entry.correct {
   background: #0d1f0e;
   border: 1px solid #2a4a2b;
@@ -226,6 +290,7 @@ body {
 
 .log-entry.correct .log-icon { color: var(--green); }
 
+/* wrong answer — red tinted background and border */
 .log-entry.wrong {
   background: #1f0d0d;
   border: 1px solid #4a2b2b;
@@ -234,13 +299,18 @@ body {
 
 .log-entry.wrong .log-icon { color: var(--red); }
 
+/* pending — neutral while the user hasn't answered yet */
 .log-entry.pending {
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--muted);
 }
 
-/* ── score screen ── */
+
+/* ─── score screen ─────────────────────────────────────────────────────────────
+   hidden by default with display: none, shown as a flex column by endGame()
+   in app.js when all five questions are done. replaces the prompt and log. */
+
 #score-screen {
   display: none;
   flex-direction: column;
@@ -257,6 +327,8 @@ body {
   text-transform: uppercase;
 }
 
+/* large score fraction like "3/5" — score-correct is big and white,
+   score-denom is slightly smaller and muted so the numerator reads first */
 #score-fraction {
   font-family: var(--font-head);
   font-size: 4rem;
@@ -280,6 +352,7 @@ body {
   color: var(--muted);
 }
 
+/* play again button — accent background, dark text so it has contrast */
 #restart-btn {
   margin-top: 12px;
   background: var(--accent);
@@ -297,10 +370,72 @@ body {
 
 #restart-btn:hover { opacity: 0.85; }
 
-/* ── map ── */
-#map {
+
+/* ─── map wrap ─────────────────────────────────────────────────────────────────
+   map-wrap takes all remaining horizontal space via flex: 1.
+   position: relative is needed so the ::before and ::after pseudo-elements
+   position themselves relative to the map area, not the whole page.
+   the pseudo-elements layer visual effects over the map without interfering
+   with google maps' own pointer events — pointer-events: none is critical. */
+
+#map-wrap {
   flex: 1;
+  position: relative;
   height: 100%;
 }
 
-/* custom google maps style injected via mapTypeId options in js */
+/* subtle scan line texture over the map — repeating horizontal stripes
+   at very low opacity give it a slight screen/display feel */
+#map-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.04) 2px,
+    rgba(0, 0, 0, 0.04) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* faint accent border around the map edge */
+#map-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(212, 244, 85, 0.08);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* map fills the wrapper completely */
+#map-wrap #map {
+  width: 100%;
+  height: 100%;
+}
+
+/* crosshair cursor on the map so it's obvious this is a click target.
+   !important overrides the default google maps cursor styles. */
+#map,
+#map > div {
+  cursor: crosshair !important;
+}
+
+
+/* ─── prompt flash animation ───────────────────────────────────────────────────
+   when showQuestion() fires in app.js it briefly adds .flash to #prompt-section.
+   this pulses the left border from full accent to faded and back, giving a
+   visual cue that the question just changed. the class is removed after 400ms. */
+
+@keyframes prompt-flash {
+  0%   { border-left-color: var(--accent); }
+  50%  { border-left-color: rgba(212, 244, 85, 0.3); }
+  100% { border-left-color: var(--accent); }
+}
+
+#prompt-section.flash {
+  animation: prompt-flash 0.4s ease;
+}
