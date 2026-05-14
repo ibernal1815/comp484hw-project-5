@@ -13,11 +13,12 @@
 // my assigned location from the project sheet is the asian american activities center.
 
 var locations = [
-  { name: "Asian American Activities Center", lat: 34.24280, lng: -118.53010, radius: 60 },
-  { name: "University Library",               lat: 34.24163, lng: -118.52815, radius: 65 },
-  { name: "Jacaranda Hall",                   lat: 34.24048, lng: -118.52680, radius: 60 },
-  { name: "Student Recreation Center",        lat: 34.23942, lng: -118.52588, radius: 70 },
-  { name: "Manzanita Hall",                   lat: 34.24363, lng: -118.52750, radius: 60 }
+  // coordinates read directly from the labeled google maps campus screenshot
+  { name: "Asian American Activities Center", lat: 34.24465, lng: -118.53008, radius: 65 },
+  { name: "University Library",               lat: 34.24165, lng: -118.52832, radius: 65 },
+  { name: "Jacaranda Hall",                   lat: 34.24232, lng: -118.52690, radius: 60 },
+  { name: "Student Recreation Center",        lat: 34.24063, lng: -118.52455, radius: 65 },
+  { name: "Manzanita Hall",                   lat: 34.24112, lng: -118.52890, radius: 60 }
 ];
 
 
@@ -64,8 +65,8 @@ var gameActive     = false;
 
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: 34.2416, lng: -118.5280 },
-    zoom: 17,
+    center: { lat: 34.2425, lng: -118.5275 },  // centered to show all five buildings
+    zoom: 18,
     disableDefaultUI: true,
     disableDoubleClickZoom: true,   // stops maps from consuming dblclick for zoom
     keyboardShortcuts: false,
