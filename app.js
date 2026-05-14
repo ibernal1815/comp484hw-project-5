@@ -249,7 +249,7 @@ function updateCounter() {
 
 
 // ─── endGame ───────────────────────────────────────────────────────────────────
-// stops the timer and shows the final score screen.
+// stops the timer, saves the score to localStorage, and shows the score screen.
 
 function endGame() {
   gameActive = false;
@@ -263,6 +263,59 @@ function endGame() {
   $("#score-breakdown").text(score + " correct, " + wrong + " wrong");
   $("#score-time-final").text("finished in " + formatTime(elapsedSeconds));
   $("#score-screen").css("display", "flex");
+
+  saveAndShowScores(score, elapsedSeconds);
+}
+
+
+// ─── saveAndShowScores ─────────────────────────────────────────────────────────
+// saves the current run to localStorage and rebuilds the high score list.
+// scores are sorted by correct answers (desc), then by time (asc) as a tiebreaker.
+// only the top 5 are kept.
+
+function saveAndShowScores(currentScore, currentTime) {
+  // load existing scores from localStorage, default to empty array if none
+  var scores = JSON.parse(localStorage.getItem("csunQuizScores") || "[]");
+
+  // add the current run
+  scores.push({ score: currentScore, time: currentTime });
+
+  // sort: higher score first, faster time wins tiebreaker
+  scores.sort(function(a, b) {
+    if (b.score !== a.score) return b.score - a.score;
+    return a.time - b.time;
+  });
+
+  // keep only the top 5
+  scores = scores.slice(0, 5);
+
+  // save back to localStorage
+  localStorage.setItem("csunQuizScores", JSON.stringify(scores));
+
+  // check if this run is the new best (first entry after sort)
+  var isNewBest = scores[0].score === currentScore && scores[0].time === currentTime;
+  if (isNewBest && scores.length > 1) {
+    $("#new-best").text("New High Score!").show();
+  } else {
+    $("#new-best").hide();
+  }
+
+  // rebuild the high score list in the DOM
+  $("#high-score-list").empty();
+  scores.forEach(function(entry, i) {
+    var row = $("<div>").addClass("hs-row");
+    var rank = $("<span>").addClass("hs-rank").text("#" + (i + 1));
+    var sc   = $("<span>").addClass("hs-score").text(entry.score + "/5");
+    var tm   = $("<span>").addClass("hs-time").text(formatTime(entry.time));
+
+    // highlight the current run's row
+    if (entry.score === currentScore && entry.time === currentTime && i === 0) {
+      row.addClass("hs-current");
+    }
+
+    row.append(rank).append(sc).append(tm);
+    $("#high-score-list").append(row);
+  });
 }
 
 
@@ -293,9 +346,10 @@ function formatTime(s) {
 
 
 // ─── restart ───────────────────────────────────────────────────────────────────
-// startGame() already clears drawnRects by calling setMap(null) on each one,
-// so rectangles from the previous round are removed before the new round starts.
+// startGame() clears drawnRects via setMap(null) so previous rectangles disappear.
+// the new-best badge is hidden on restart since it only makes sense right after a run.
 
 $("#restart-btn").on("click", function() {
+  $("#new-best").hide();
   startGame();
 });
