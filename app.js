@@ -14,13 +14,14 @@
 
 var locations = [
   // coordinates computed from the official csun campus map grid (fall 2025 pdf)
-  // grid anchors: Reseda Blvd=col A west edge, Lindley Ave=col G east edge,
-  //               Devonshire St=row 1 north edge, Nordhoff St=row 13 south edge
-  { name: "Asian American Activities Center", lat: 34.24560, lng: -118.53000, radius: 65 },
-  { name: "University Library",               lat: 34.24749, lng: -118.52760, radius: 65 },
-  { name: "Jacaranda Hall",                   lat: 34.24654, lng: -118.52640, radius: 65 },
-  { name: "Student Recreation Center",        lat: 34.24749, lng: -118.52400, radius: 65 },
-  { name: "Manzanita Hall",                   lat: 34.24938, lng: -118.52760, radius: 65 }
+  // grid anchors: Reseda Blvd=col A west, Lindley Ave=col G east,
+  //               Plummer St=row 1 north, Nordhoff St=row 13 south
+  // (main campus runs Plummer to Nordhoff, not Devonshire — previous version was wrong)
+  { name: "Asian American Activities Center", lat: 34.24254, lng: -118.53000, radius: 65 },
+  { name: "University Library",               lat: 34.24362, lng: -118.52760, radius: 65 },
+  { name: "Jacaranda Hall",                   lat: 34.24308, lng: -118.52640, radius: 65 },
+  { name: "Student Recreation Center",        lat: 34.24362, lng: -118.52400, radius: 65 },
+  { name: "Manzanita Hall",                   lat: 34.24469, lng: -118.52760, radius: 65 }
 ];
 
 
@@ -67,7 +68,7 @@ var gameActive     = false;
 
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: 34.2465, lng: -118.5270 },  // centered on main campus
+    center: { lat: 34.2420, lng: -118.5276 },  // centered between Plummer and Nordhoff
     zoom: 16,
     disableDefaultUI: true,
     disableDoubleClickZoom: true,   // stops maps from consuming dblclick for zoom
