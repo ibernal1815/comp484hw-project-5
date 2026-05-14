@@ -13,12 +13,14 @@
 // my assigned location from the project sheet is the asian american activities center.
 
 var locations = [
-  // coordinates read directly from the labeled google maps campus screenshot
-  { name: "Asian American Activities Center", lat: 34.24465, lng: -118.53008, radius: 65 },
-  { name: "University Library",               lat: 34.24165, lng: -118.52832, radius: 65 },
-  { name: "Jacaranda Hall",                   lat: 34.24232, lng: -118.52690, radius: 60 },
-  { name: "Student Recreation Center",        lat: 34.24063, lng: -118.52455, radius: 65 },
-  { name: "Manzanita Hall",                   lat: 34.24112, lng: -118.52890, radius: 60 }
+  // coordinates computed from the official csun campus map grid (fall 2025 pdf)
+  // grid anchors: Reseda Blvd=col A west edge, Lindley Ave=col G east edge,
+  //               Devonshire St=row 1 north edge, Nordhoff St=row 13 south edge
+  { name: "Asian American Activities Center", lat: 34.24560, lng: -118.53000, radius: 65 },
+  { name: "University Library",               lat: 34.24749, lng: -118.52760, radius: 65 },
+  { name: "Jacaranda Hall",                   lat: 34.24654, lng: -118.52640, radius: 65 },
+  { name: "Student Recreation Center",        lat: 34.24749, lng: -118.52400, radius: 65 },
+  { name: "Manzanita Hall",                   lat: 34.24938, lng: -118.52760, radius: 65 }
 ];
 
 
@@ -65,8 +67,8 @@ var gameActive     = false;
 
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: 34.2425, lng: -118.5275 },  // centered to show all five buildings
-    zoom: 18,
+    center: { lat: 34.2465, lng: -118.5270 },  // centered on main campus
+    zoom: 16,
     disableDefaultUI: true,
     disableDoubleClickZoom: true,   // stops maps from consuming dblclick for zoom
     keyboardShortcuts: false,
@@ -191,8 +193,10 @@ function updateLogEntry(index, name, correct, dist) {
   entry.removeClass("pending").addClass(correct ? "correct" : "wrong");
   entry.empty();
 
+  // feedback text matches the spec: "Your answer is correct!!" and "Sorry wrong location."
+  var result = correct ? "Your answer is correct!!" : "Sorry wrong location.";
   entry.append($("<span>").addClass("log-icon").text(correct ? "+" : "x"));
-  entry.append($("<span>").text((index + 1) + ". " + (correct ? name : name + " (" + dist + "m off)")));
+  entry.append($("<span>").text((index + 1) + ". " + name + " — " + result));
 }
 
 
