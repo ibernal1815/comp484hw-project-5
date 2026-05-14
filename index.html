@@ -80,6 +80,7 @@
     <!--
       score screen — hidden during game, shown by endGame().
       score-correct, score-breakdown, score-time-final filled by app.js.
+      high-score-list is populated from localStorage by saveAndShowScores().
     -->
     <div id="score-screen">
       <div id="score-label">Final Score</div>
@@ -88,6 +89,14 @@
       </div>
       <div id="score-breakdown"></div>
       <div id="score-time-final"></div>
+      <div id="new-best"></div>
+
+      <!-- high score table — top 5 runs stored in localStorage -->
+      <div id="hs-section">
+        <div id="hs-label">High Scores</div>
+        <div id="high-score-list"></div>
+      </div>
+
       <button id="restart-btn">Play Again</button>
     </div>
 
