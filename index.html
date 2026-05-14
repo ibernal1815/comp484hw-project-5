@@ -4,45 +4,47 @@
   <meta charset="UTF-8" />
   <title>CSUN Map Quiz</title>
 
-  <!-- preconnect shaves a little load time off the google fonts request -->
+  <!-- preconnect shaves load time off the google fonts request -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
   <!--
-    syne is used for display text (logo, building name, score number) —
-    it's geometric and heavy so it reads well at large sizes.
-    space mono handles all the data/ui text (timer, log entries, counter)
-    since monospace digits don't jump around as the numbers change.
+    syne for display text (logo, building name, score).
+    space mono for all data/ui text (timer, log, counter) —
+    monospace digits don't shift width as numbers change.
   -->
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="style.css" />
 
-  <!-- jquery is allowed per the project spec, using it for DOM manipulation -->
+  <!-- jquery loaded in head so it's ready before app.js runs -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+  <!-- app.js loaded here BEFORE the maps tag so initMap is defined
+       by the time the maps API calls it via the callback param -->
+  <script src="app.js"></script>
 </head>
 <body>
 
-  <!-- left panel — all game UI lives here, map fills everything to the right -->
+  <!-- left panel — all game UI lives here -->
   <div id="panel">
 
-    <!-- top row: logo on the left, question counter on the right -->
+    <!-- logo left, question counter right -->
     <div id="panel-header">
       <div id="logo">
         <span id="logo-csun">CSUN</span>
         <span id="logo-sub">MAP QUIZ</span>
       </div>
-      <!-- q-current and q-total are updated by updateCounter() in app.js -->
+      <!-- updated by updateCounter() in app.js -->
       <div id="q-counter">
         <span id="q-current">1</span><span id="q-sep">/</span><span id="q-total">5</span>
       </div>
     </div>
 
     <!--
-      svg timer ring — two concentric circles stacked on top of each other.
-      ring-bg is the static dark track, ring-fg is the accent stroke on top.
-      the svg is rotated -90deg in css so the stroke starts at 12 o'clock
-      instead of 3 o'clock. timer-display inside shows the mm:ss text.
+      svg timer ring — ring-bg is the static dark track,
+      ring-fg is the accent stroke on top.
+      rotated -90deg in css so the stroke starts at 12 o'clock.
     -->
     <div id="timer-ring-wrap">
       <svg id="timer-svg" viewBox="0 0 120 120">
@@ -50,17 +52,16 @@
         <circle class="ring-fg" id="ring-progress" cx="60" cy="60" r="50" />
       </svg>
       <div id="timer-center">
-        <!-- timer-display text is updated every second by updateTimerDisplay() -->
+        <!-- updated every second by updateTimerDisplay() -->
         <div id="timer-display">0:00</div>
         <div id="timer-label">elapsed</div>
       </div>
     </div>
 
     <!--
-      prompt section — shows the current building the user needs to find.
-      prompt-name is swapped out by showQuestion() in app.js each round.
-      the whole section gets a .flash class briefly when the question changes
-      to make the transition obvious, then the class is removed.
+      prompt — shows the current building to find.
+      prompt-name is swapped by showQuestion() each round.
+      gets .flash class briefly when question changes.
     -->
     <div id="prompt-section">
       <div id="prompt-eyebrow">double click to locate</div>
@@ -68,9 +69,8 @@
     </div>
 
     <!--
-      answer log — entries are appended here by showQuestion() as pending,
-      then updated to correct or wrong by updateLogEntry() after each guess.
-      the log scrolls if there are more entries than fit in the panel.
+      answer log — entries appended as pending by showQuestion(),
+      then updated to correct/wrong by updateLogEntry() after each guess.
     -->
     <div id="log-section">
       <div id="log-header">Answer Log</div>
@@ -78,9 +78,8 @@
     </div>
 
     <!--
-      score screen — hidden during the game, shown by endGame() when all
-      five questions are answered. score-correct, score-breakdown, and
-      score-time-final are all filled in dynamically from app.js.
+      score screen — hidden during game, shown by endGame().
+      score-correct, score-breakdown, score-time-final filled by app.js.
     -->
     <div id="score-screen">
       <div id="score-label">Final Score</div>
@@ -95,30 +94,25 @@
   </div>
 
   <!--
-    map-wrap exists so we can layer pseudo-elements (scan lines, border glow)
-    over the map using ::before and ::after in css without touching the map div
-    itself, since google maps injects its own children into #map directly.
+    map-wrap wraps the map div so we can layer pseudo-elements
+    (scan lines, border glow) without touching the map div itself,
+    since google maps injects its own children into #map directly.
   -->
   <div id="map-wrap">
     <div id="map"></div>
   </div>
 
   <!--
-    google maps API script tag.
-    - key: replace YOUR_API_KEY with your actual key from google cloud console
-    - libraries=geometry: loads the spherical geometry library which gives us
-      computeDistanceBetween() for measuring how far off each guess is
-    - callback=initMap: tells the API to call our initMap() function in app.js
-      once it finishes loading, which is why initMap has to be a global function
-    - async defer: loads the script without blocking the rest of the page
+    google maps API — loaded last, at the bottom of body.
+    key: replace YOUR_API_KEY with your actual key.
+    libraries=geometry: loads spherical library for computeDistanceBetween().
+    callback=initMap: calls our initMap() once the API is ready.
+    app.js is loaded in the head above so initMap is already defined by now.
   -->
   <script
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDXnvJjPaqypxFQ-nXrXAhNucJMwykTu2s&libraries=geometry&callback=initMap"
+    src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=geometry&callback=initMap"
     async defer
   ></script>
-
-  <!-- app.js loaded after the maps tag so the DOM is ready when it runs -->
-  <script src="app.js"></script>
 
 </body>
 </html>
