@@ -439,3 +439,61 @@ body {
 #prompt-section.flash {
   animation: prompt-flash 0.4s ease;
 }
+
+
+/* ─── high score section ───────────────────────────────────────────────────────
+   sits inside the score screen between the time and the play again button.
+   each row is rank | score | time laid out with space-between. */
+
+#hs-section {
+  width: 100%;
+  margin-top: 6px;
+}
+
+#hs-label {
+  font-size: 0.6rem;
+  letter-spacing: 3px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+#high-score-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+.hs-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: 0.75rem;
+}
+
+/* highlight the row that belongs to the current run */
+.hs-row.hs-current {
+  border-color: var(--accent);
+  background: rgba(212, 244, 85, 0.06);
+}
+
+.hs-rank  { color: var(--muted); width: 28px; }
+.hs-score { color: var(--text);  font-weight: 700; }
+.hs-time  { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* new high score badge — shown briefly when the player beats their best */
+#new-best {
+  font-family: var(--font-head);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  display: none;
+}
