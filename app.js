@@ -13,15 +13,12 @@
 // my assigned location from the project sheet is the asian american activities center.
 
 var locations = [
-  // coordinates computed from the official csun campus map grid (fall 2025 pdf)
-  // grid anchors: Reseda Blvd=col A west, Lindley Ave=col G east,
-  //               Plummer St=row 1 north, Nordhoff St=row 13 south
-  // (main campus runs Plummer to Nordhoff, not Devonshire — previous version was wrong)
-  { name: "Asian American Activities Center", lat: 34.24254, lng: -118.53000, radius: 65 },
-  { name: "University Library",               lat: 34.24362, lng: -118.52760, radius: 65 },
-  { name: "Jacaranda Hall",                   lat: 34.24308, lng: -118.52640, radius: 65 },
-  { name: "Student Recreation Center",        lat: 34.24362, lng: -118.52400, radius: 65 },
-  { name: "Manzanita Hall",                   lat: 34.24469, lng: -118.52760, radius: 65 }
+  // coordinates pulled directly from google maps — right-click > "What's here?" on each building
+  { name: "Asian American Activities Center", lat: 34.24424, lng: -118.53369, radius: 65 },
+  { name: "University Library",               lat: 34.24022, lng: -118.52925, radius: 65 },
+  { name: "Jacaranda Hall",                   lat: 34.24129, lng: -118.52897, radius: 65 },
+  { name: "Student Recreation Center",        lat: 34.24005, lng: -118.52500, radius: 65 },
+  { name: "Manzanita Hall",                   lat: 34.23783, lng: -118.53036, radius: 65 }
 ];
 
 
@@ -68,7 +65,7 @@ var gameActive     = false;
 
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: 34.2420, lng: -118.5276 },  // centered between Plummer and Nordhoff
+    center: { lat: 34.2415, lng: -118.5295 },  // centered on the five building locations
     zoom: 16,
     disableDefaultUI: true,
     disableDoubleClickZoom: true,   // stops maps from consuming dblclick for zoom
