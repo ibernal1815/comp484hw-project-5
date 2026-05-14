@@ -120,7 +120,8 @@ function initMap() {
     center: { lat: 34.2416, lng: -118.5280 },  // centered on csun's main quad
     zoom: 17,                                    // tight enough to see individual buildings
     disableDefaultUI: true,                      // removes all default map controls
-    gestureHandling: "cooperative",              // blocks scroll zoom but allows click events
+    gestureHandling: "none",                    // disables all default gesture handling
+    disableDoubleClickZoom: true,               // stops maps from consuming dblclick for zoom
     keyboardShortcuts: false,
     clickableIcons: false                        // prevents POI popups from interrupting clicks
   });
@@ -146,8 +147,12 @@ function initMap() {
     scrollwheel: false        // belt-and-suspenders zoom lock on top of gestureHandling
   });
 
-  // listen for double clicks anywhere on the map surface
+  // listen for double clicks on the map.
+  // disableDoubleClickZoom: true above stops maps from zooming on dblclick,
+  // so the event reaches our handler instead of being consumed for zoom.
+  // event.stop() prevents the click from bubbling further into the maps internals.
   map.addListener("dblclick", function(event) {
+    event.stop();
     handleClick(event.latLng);
   });
 
