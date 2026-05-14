@@ -348,8 +348,12 @@ function formatTime(s) {
 // ─── restart ───────────────────────────────────────────────────────────────────
 // startGame() clears drawnRects via setMap(null) so previous rectangles disappear.
 // the new-best badge is hidden on restart since it only makes sense right after a run.
+// wrapped in $(document).ready so the button exists in the DOM before we bind to it —
+// app.js loads in the <head> so without this the element isn't there yet when this runs.
 
-$("#restart-btn").on("click", function() {
-  $("#new-best").hide();
-  startGame();
+$(document).ready(function() {
+  $("#restart-btn").on("click", function() {
+    $("#new-best").hide();
+    startGame();
+  });
 });
